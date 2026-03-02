@@ -155,11 +155,16 @@ def main():
     )
 
     if args.api_key != "EMPTY":
-        client = AzureOpenAI(
-            azure_endpoint=args.url,
-            api_key=args.api_key,
-            api_version="2023-05-15"
-        )
+        if 'azure' in args.url:
+            client = AzureOpenAI(
+                azure_endpoint=args.url,
+                api_key=args.api_key,
+            )
+        else:
+            client = OpenAI(
+                api_key=args.api_key,
+                base_url=args.url,
+            )
 
     # Process in batches
     all_results = {}

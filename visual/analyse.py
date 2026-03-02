@@ -1,7 +1,6 @@
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
-os.environ["ORION_GMEM_CONTROL"] = 'v1'
 # from load_model import QwenVLModel
 import json
 from tqdm import tqdm
@@ -239,11 +238,11 @@ class AttentionAnalyse:
             self.attention_maps = []
 
 if __name__ == '__main__':
-    model_name = '/gemini/space/yifq/zhaozy/ousiqu/attn/model_result/Qwen3-VL-8B-Instruct/merged_models/type9'
-    data_path = '/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/Analysis_0.5k.parquet'
+    model_name = 'PATH/YOUR/MODEL'
+    data_path = 'PATH/YOUR/DATA'
     aa = AttentionAnalyse(
         model_name,
-        save_dir='/gemini/space/yifq/zhaozy/ousiqu/attn/visual/Type9',
+        save_dir='PATH/YOUR/OUTPUT/DIR',
         data_path=data_path,
         ModelClass=Qwen3VLForConditionalGeneration,
     )

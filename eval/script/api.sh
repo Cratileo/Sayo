@@ -1,8 +1,7 @@
-# HF_MODEL="/absolute/path/to/LooK-Back/MLLMs/Solution-back-7B"
-# HF_MODEL="/gemini/space/yifq/zhaozy/models/InternVl3_5-8B"
-EVAL_DIR="/gemini/space/yifq/zhaozy/ousiqu/attn/eval/other"
-DATA_DIR="/gemini/space/yifq/zhaozy/ousiqu/attn/datasets"
-RESULTS_DIR="/gemini/space/yifq/zhaozy/ousiqu/attn/results/new/gpt-4o"
+
+EVAL_DIR="ABSOLUTE/PATH/THIS/DIR"
+DATA_DIR="ABSOLUTE/PATH/DATASETS/DIR"
+RESULTS_DIR="ABSOLUTE/PATH/RESULTS/DIR"
 mkdir -p "$RESULTS_DIR"
 
 cd "$EVAL_DIR"
@@ -16,7 +15,7 @@ python main.py \
   --temperature 0.1 \
   --top-p 0.1 \
   --version "grpo" \
-  --url "https://research-01-01.openai.azure.com/" \
+  --url "" \
   --api-key "" \
   
 echo "Finished, close server (PID: $VLLM_PID)..."

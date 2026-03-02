@@ -28,8 +28,8 @@ def batch_scale_images(input_dir, output_dir, scale_factor=0.5):
             except Exception as e:
                 print(f"  ❌ Failed to process {filename}: {e}")
 
-INPUT_FOLDER = '/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/SA-1B/sa_000005' 
-OUTPUT_FOLDER = '/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/SA-1B/resize/sa_000005'
+INPUT_FOLDER = './datasets/SA-1B/sa_000005' 
+OUTPUT_FOLDER = './datasets/SA-1B/resize/sa_000005'
 SCALE_FACTOR = 0.65 
 
 batch_scale_images(INPUT_FOLDER, OUTPUT_FOLDER, SCALE_FACTOR)

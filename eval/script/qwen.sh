@@ -1,5 +1,3 @@
-# export VLLM_ATTENTION_BACKEND=XFORMERS
-# export VLLM_USE_V1=0
 
 GPU_ID="0,1"
 export CUDA_VISIBLE_DEVICES=$GPU_ID
@@ -8,14 +6,14 @@ PORT=10721
 # export HF_ENDPOINT=https://hf-mirror.com
 
 echo "Start vLLM Server..."
-vllm serve /gemini/space/yifq/zhaozy/ousiqu/attn/model_result/Qwen3-VL-8B-Instruct/merged_models/type9 \
+vllm serve YOUR/MODEL/PATH \
     --served-model-name Qwen3-VL-8B-Instruct \
     --tensor-parallel-size 2 \
     --dtype bfloat16 \
     --max-model-len 25000 \
     --max-parallel-loading-workers 2 \
     --gpu-memory-utilization 0.95 \
-    --port $PORT > vllm_server_02.log 2>&1 &
+    --port $PORT > vllm_server.log 2>&1 &
 
 VLLM_PID=$!
 
@@ -26,9 +24,9 @@ while ! curl -s http://localhost:$PORT/v1/models > /dev/null; do
 done
 echo "Done"
 
-EVAL_DIR="/gemini/space/yifq/zhaozy/ousiqu/attn/eval/other"
-DATA_DIR="/gemini/space/yifq/zhaozy/ousiqu/attn/datasets"
-RESULTS_DIR="/gemini/space/yifq/zhaozy/ousiqu/attn/results/new/type9"
+EVAL_DIR="ABSOLUTE/PATH/THIS/DIR"
+DATA_DIR="ABSOLUTE/PATH/DATASETS/DIR"
+RESULTS_DIR="ABSOLUTE/PATH/RESULTS/DIR"
 mkdir -p "$RESULTS_DIR"
 
 cd "$EVAL_DIR"

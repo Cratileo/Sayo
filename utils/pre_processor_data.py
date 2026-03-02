@@ -103,7 +103,7 @@ def find_closest_aspect_ratio(aspect_ratio, target_ratios, width, height, image_
 
 def merge_datasets():
     # data1 = datasets.load_dataset('/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/DocVQA', 'InfographicVQA', split='test[:50%]')
-    data2 = datasets.load_dataset('/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/ReFocus_Data', split='train')
+    data2 = datasets.load_dataset('./datasets/ReFocus_Data', split='train')
     data2 = data2.train_test_split(test_size=0.25, seed=42)["test"]
 
     rows = []
@@ -130,10 +130,10 @@ def merge_datasets():
             'focus_area': token_range
         })
         
-    with open('/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/GQA/questions/train_all_questions/train_all_questions_0.json', 'r') as f:
+    with open('./datasets/GQA/questions/train_all_questions/train_all_questions_0.json', 'r') as f:
         data1 = json.load(f)
     
-    with open('/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/GQA/sencegraphs/train_sceneGraphs.json', 'r') as f:
+    with open('./datasets/GQA/sencegraphs/train_sceneGraphs.json', 'r') as f:
         data1_sg = json.load(f)
 
     for k, v in tqdm(data1.items()):
@@ -142,7 +142,7 @@ def merge_datasets():
             print('no bbox id found!')
             continue
         bbox_id = bbox_id.group(1)
-        image = Image.open(os.path.join('/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/GQA/images', f'{v['imageId']}.jpg'))
+        image = Image.open(os.path.join('./datasets/GQA/images', f'{v["imageId"]}.jpg'))
         question = v['question']
         answer = v['fullAnswer']
         short_answer = v['answer']
@@ -167,17 +167,11 @@ def merge_datasets():
         })
         if len(rows) > 20000:
             table = pa.Table.from_pylist(rows)
-            pq.write_table(table, '/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/GRPO_20k_Ver_InternVL_Neo.parquet')
+            pq.write_table(table, './datasets/GRPO_20k_Ver_InternVL_Neo.parquet')
             print('15k rl data done!')
             rl_end = True
             rows = []
             break
-
-        # if len(rows) > 1500 and rl_end:
-        #     table = pa.Table.from_pylist(rows)
-        #     pq.write_table(table, '/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/sft_1.5k.parquet')
-        #     print('1.5k sft data done!')
-        #     break
 
 if __name__ == '__main__':
     merge_datasets()

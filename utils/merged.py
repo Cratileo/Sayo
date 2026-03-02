@@ -5,9 +5,9 @@ import torch
 from transformers import Qwen3VLForConditionalGeneration, AutoProcessor, AutoModelForImageTextToText
 from peft import PeftModel
 
-base_model_path = "/gemini/space/yifq/zhaozy/models/InternVL3_5-8B-HF"
-lora_path = "/gemini/space/yifq/zhaozy/ousiqu/attn/model_result/InternVL3_5-8B/2nd/checkpoint-2475"
-output_path = "/gemini/space/yifq/zhaozy/ousiqu/attn/model_result/InternVL3_5-8B/merged_models/type2_2475"
+base_model_path = "PATH/YOUR/BASE/MODEL"
+lora_path = "PATH/YOUR/LORA/CHECKPOINT"
+output_path = "PATH/YOUR/OUTPUT/MODEL"
 
 # load base
 model = AutoModelForImageTextToText.from_pretrained(

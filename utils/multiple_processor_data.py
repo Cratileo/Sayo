@@ -148,16 +148,13 @@ def write_row(writer, row):
 def merge_datasets():
     num_workers = min(cpu_count(), 48)
     chunksize = 64 
-    out_path = (
-        "/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/"
-        "GRPO_20k_Ver_InternVL_nfo.parquet"
-    )
+    out_path = 'PATH/YOUR/OUTPUT/DATA.parquet'
     writer = create_parquet_writer(out_path)
     count = 0
 
     # ================= ReFocus =================
     data2 = datasets.load_dataset(
-        '/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/ReFocus_Data',
+        './datasets/ReFocus_Data',
         split='train'
     )
     data2 = data2.train_test_split(test_size=0.25, seed=42)["test"]
@@ -180,16 +177,16 @@ def merge_datasets():
 
     # ================= GQA =================
     with open(
-        '/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/GQA/questions/train_all_questions/train_all_questions_0.json'
+        './datasets/GQA/questions/train_all_questions/train_all_questions_0.json'
     ) as f:
         data1 = json.load(f)
 
     with open(
-        '/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/GQA/sencegraphs/train_sceneGraphs.json'
+        './datasets/GQA/sencegraphs/train_sceneGraphs.json'
     ) as f:
         data1_sg = json.load(f)
 
-    image_root = '/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/GQA/images'
+    image_root = './datasets/GQA/images'
 
     args = (
         (k, v, data1_sg, image_root)
