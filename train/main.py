@@ -1,13 +1,11 @@
 import os
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
-os.environ["ORION_GMEM_CONTROL"] = 'v1'
 import torch
 from datasets import load_dataset, Features, Value, Image
 import datasets
 import accelerate
 
 from trainer import NeoGRPOTrainerInternVL, NeoGRPOTrainer
-from trl.rewards import think_format_reward
 from trl import (
     GRPOConfig,
     ModelConfig,
@@ -38,8 +36,6 @@ class QwenVLGRPOTrainer():
             checkpoint = self.training_args.resume_from_checkpoint
             
         trainer.train(resume_from_checkpoint=checkpoint)
-
-        # trainer.save_model(self.training_args.output_dir)
 
 
     def model_init(self):

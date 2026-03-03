@@ -8,6 +8,7 @@ def attn_reward(prompt_ids_list, focus_area, attns, entropy_ids, step:int, **kwa
     batch_size = len(prompt_ids_list)
     #QwenVL:151655, InternVL:151671
     first_last_indices = find_first_last_list(prompt_ids_list, target=151655)
+    
     per_batch = decouple_batch(attns)
     # per_batch = capture_answer(per_batch, completion_ids=kwargs['completion_ids'])
     per_batch = capture_high_entropy_tokens(per_batch, entropy_ids=entropy_ids)
@@ -25,9 +26,6 @@ def attn_reward(prompt_ids_list, focus_area, attns, entropy_ids, step:int, **kwa
 
         # compute log ratio
         log_ratio = math.log((aim + eps) / (img + eps))
-
-        # clamp to avoid extreme gradient
-        # log_ratio = clamp(log_ratio, -10, 10)
 
         reward = math.tanh(log_ratio)
 

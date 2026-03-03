@@ -1,11 +1,5 @@
 import re
 
-def think_format_reward(completions: list[list[dict[str, str]]], **kwargs) -> list[float]:
-    pattern = r"^<think>(?!.*<think>)(?=.*<pos>\s*\[\d+,\s*\d+,\s*\d+,\s*\d+\]\s*</pos>)(.*?)</think>.*$"
-    completion_contents = [completion[0]["content"] for completion in completions]
-    matches = [re.match(pattern, content, re.DOTALL | re.MULTILINE) for content in completion_contents]
-    return [1.0 if match else 0.0 for match in matches]
-
 def answer_format_reward(completions: list[list[dict[str, str]]], completion_ids, **kwargs) -> list[float]:
     pattern = r"<answer>(?!.*<answer>)(.*?)</answer>"
     completion_contents = [completion[0]["content"] for completion in completions]
