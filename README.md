@@ -13,3 +13,30 @@
 
 ---
 
+## Setup
+To set up your environment for training:
+```bash
+cd Sayo
+conda create -n sayo -python=3.12
+conda activate sayo
+pip install -r requirements.txt
+```
+
+## Use Guide
+To use the pre-trained models for evaluation, follow the steps below:
+
+
+## Citation
+If you find our work helpful, please cite:
+
+```bibtex
+@article{domllmsreallyseeit,
+      title={Do MLLMs Really See It: Reinforcing Visual Attention in Multimodal LLMs}, 
+      author={Siqu Ou and Tianrui Wan and Zhiyuan Zhao and Junyu Gao and Xuelong Li},
+      year={2026},
+      eprint={2602.08241},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2602.08241}, 
+}
+```
