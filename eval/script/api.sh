@@ -18,5 +18,4 @@ python main.py \
   --url "" \
   --api-key "" \
   
-echo "Finished, close server (PID: $VLLM_PID)..."
-kill $VLLM_PID
+echo "Finished, close server..."

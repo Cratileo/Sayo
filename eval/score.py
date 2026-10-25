@@ -74,6 +74,7 @@ def process_json_files(folder_path: str) -> None:
         'Tallyqa.json',
         'MME.json',
         'mmstar.json',
+        'mmmu_pro.json'
     }
 
     for filename in os.listdir(folder_path):

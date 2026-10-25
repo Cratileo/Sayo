@@ -12,7 +12,7 @@ def load_wemath_dataset(data_path: str) -> List[Dict]:
     # data_path = os.path.join(data_path, "We-Math/testmini.json")
     # with open(data_path, "r", encoding="utf-8") as f:
     #     data = json.load(f)
-    data = load_dataset("/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/We-Math", split="testmini")
+    data = load_dataset(os.path.join(data_path, "We-Math"), split="testmini")
     
     dataset = []
     for item in data:
@@ -32,7 +32,7 @@ def load_wemath_dataset(data_path: str) -> List[Dict]:
 def load_mathvista_dataset(data_path: str) -> List[Dict]:
     """Load MathVista dataset"""
     image_base_dir = os.path.join(data_path, "MathVista/images")
-    dataset_raw = load_dataset("/gemini/space/yifq/zhaozy/ousiqu/attn/datasets/MathVista", split="testmini")
+    dataset_raw = load_dataset(os.path.join(data_path, "MathVista"), split="testmini")
     
     dataset = []
     mapping = {
@@ -231,12 +231,12 @@ def load_mathvision_dataset(data_path: str) -> List[Dict]:
 
 def load_hallubench_dataset(data_path: str) -> List[Dict]:
     """Load Hallubench dataset"""
-    image_base_dir = os.path.join(data_path, "HallusionBench/images")
-    data_path = os.path.join(data_path, "HallusionBench/HallusionBench.json")
+    data_path = os.path.join(data_path, "HallusionBench")
     # data_path = os.path.join(data_path, "hallubench/HallusionBench-test.json")
+    data = load_dataset(data_path, split="image")
     
-    with open(data_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    # with open(data_path, "r", encoding="utf-8") as f:
+    #     data = json.load(f)
     
     dataset = []
     for item in data:
@@ -252,7 +252,7 @@ def load_hallubench_dataset(data_path: str) -> List[Dict]:
         sid, fid, qid = item["set_id"], item["figure_id"], item["question_id"]
         dataset.append({
             "id": f"{sid}_{fid}_{qid}",
-            "image_path": os.path.join(image_base_dir, item["filename"].replace("./", "")),
+            "image_path": item['image'],
             "question": question,
             "question_for_eval": question,
             "answer": gt_answer,
@@ -444,6 +444,77 @@ def load_mmstar_dataset(data_path:str) -> List[Dict]:
             "question": item["question"],
             "answer": item["answer"],
             "dataset": "mmstar"
+        })
+
+    return dataset
+
+def load_mmmu_pro_dataset(data_path: str, config: str = "standard (10 options)") -> List[Dict]:
+    """Load MMMU-Pro dataset
+
+    Args:
+        data_path: base path containing the MMMU_Pro folder
+        config: one of 'vision', 'standard (10 options)', 'standard (4 options)'
+    """
+    data_path = os.path.join(data_path, "MMMU_Pro")
+    data = load_dataset(data_path, config, split="test")
+
+    dataset = []
+    if config == "vision":
+        # Vision config: question is embedded in the image, model must read it visually
+        for item in data:
+            options = eval(item["options"]) if isinstance(item["options"], str) else item["options"]
+            choices = ""
+            for i, opt in enumerate(options):
+                choices += f"{chr(65 + i)}: {opt}\n"
+
+            dataset.append({
+                "id": item["id"],
+                "image_path": item["image"],  # PIL Image object
+                "question": f"Answer the question in the image.\nOptions:\n{choices}\nYour final answer must be one of {', '.join(chr(65+i) for i in range(len(options)))}.",
+                "answer": item["answer"],
+                "subject": item.get("subject", ""),
+                "dataset": "mmmu_pro"
+            })
+    else:
+        # Standard config (4 or 10 options): question is text, images are separate
+        for item in data:
+            options = eval(item["options"]) if isinstance(item["options"], str) else item["options"]
+            choices = ""
+            for i, opt in enumerate(options):
+                choices += f"{chr(65 + i)}: {opt}\n"
+
+            # Collect all non-None images
+            images = []
+            for i in range(1, 8):
+                img = item.get(f"image_{i}")
+                if img is not None:
+                    images.append(img)
+
+            dataset.append({
+                "id": item["id"],
+                "image_path": images[0] if len(images) == 1 else images,  # single PIL Image or list
+                "question": f"{item['question']}\nOptions:\n{choices}\nYour final answer must be one of {', '.join(chr(65+i) for i in range(len(options)))}.",
+                "answer": item["answer"],
+                "subject": item.get("subject", ""),
+                "topic_difficulty": item.get("topic_difficulty", ""),
+                "dataset": "mmmu_pro"
+            })
+
+    return dataset
+
+def load_ERQA_dataset(data_path:str) -> List[Dict]:
+    data_path = os.path.join(data_path, "ERQA")
+    
+    data = load_dataset(data_path, split="test")
+
+    dataset = []
+    for item in data:
+        dataset.append({
+            "id": item.get("question_id", ""),
+            "image_path": item["image"],
+            "question": item["question"],
+            "answer": item["answer"],
+            "dataset": "ERQA"
         })
 
     return dataset

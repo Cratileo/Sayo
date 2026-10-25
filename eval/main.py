@@ -20,12 +20,16 @@ from utils.data_loaders import (
     load_RealWorldQA_dataset,
     load_ChartQA_dataset,
     load_mmstar_dataset,
+    load_mmmu_pro_dataset,
+    load_ERQA_dataset,
 )
 from utils.processing import (
     prepare_prompts,
     prepare_messages,
+    prepare_messages_local,
     process_outputs_simplified,
 )
+from utils.backend import VLLMLocalPipeline
 from openai import OpenAI, AzureOpenAI
 from tqdm import tqdm
 
@@ -36,7 +40,7 @@ def parse_arguments():
     parser.add_argument("--max-tokens", type=int, default=2048, help="Maximum number of tokens to generate")
     parser.add_argument("--min-pixels", type=int, default=262144)
     parser.add_argument("--max-pixels", type=int, default=5000000)
-    parser.add_argument("--max-model-len", type=int, default=8192)
+    parser.add_argument("--max-model-len", type=int, default=10240)
     parser.add_argument("--temperature", type=float, default=0.0, help="Sampling temperature")
     parser.add_argument("--top-p", type=float, default=0.1, help="Top-p sampling")
     parser.add_argument("--system-prompt", type=str, default="You FIRST think about the reasoning process as an internal monologue and then provide the final answer. The reasoning process MUST BE enclosed within <think> </think> tags. The final answer MUST BE put in \\boxed{}.", help="System prompt for the model")
@@ -59,7 +63,7 @@ def main():
     
     # Determine which datasets to evaluate
     datasets_to_eval = args.datasets.split(",") if args.datasets != "all" else [
-        "wemath", "mathvista", "mathverse", "mathvision", "hallubench", "GeoMath", "Tallyqa", "MME", "MMErealworld", 'm3cot', "CharXiv", "TableVQA", 'ai2d', 'vstar', 'RealWorldQA', 'ChartQA', 'mmstar'
+        "wemath", "mathvista", "mathverse", "mathvision", "hallubench", "GeoMath", "Tallyqa", "MME", "MMErealworld", 'm3cot', "CharXiv", "TableVQA", 'ai2d', 'vstar', 'RealWorldQA', 'ChartQA', 'mmstar', 'mmmu_pro','ERQA'
     ]
     
     # Dictionary to store all samples
@@ -125,46 +129,25 @@ def main():
         elif dataset_name == "mmstar":
             all_samples["mmstar"] = load_mmstar_dataset(args.data_path)
             print(f"Loaded {len(all_samples['mmstar'])} samples from MM-STAR")
+        elif dataset_name == "mmmu_pro":
+            all_samples["mmmu_pro"] = load_mmmu_pro_dataset(args.data_path)
+            print(f"Loaded {len(all_samples['mmmu_pro'])} samples from MMMU_Pro")
+        elif dataset_name == "ERQA":
+            all_samples["ERQA"] = load_ERQA_dataset(args.data_path)
+            print(f"Loaded {len(all_samples['ERQA'])} samples from ERQA")
 
 
     if not all_samples:
         print("No datasets loaded. Please check the paths and dataset names.")
         return
     
-    # Initialize model
-    # print(f"Initializing model from {args.model}")
-    # llm = LLM(
-    #     model=args.model,
-    #     tensor_parallel_size=args.tensor_parallel_size,
-    #     dtype=torch.bfloat16,
-    #     gpu_memory_utilization=0.7,
-    #     max_model_len=args.max_model_len,
-    # )
-    
-    # # Configure sampling parameters
-    # sampling_params = SamplingParams(
-    #     temperature=args.temperature,
-    #     top_p=args.top_p,
-    #     max_tokens=args.max_tokens,
-    #     repetition_penalty=args.repetition_penalty,
-    # )
+    llm = VLLMLocalPipeline(model=args.model, 
+                            tensor_parallel_size=torch.cuda.device_count(),
+                            gpu_memory_utilization=0.8,
+                            max_model_len=args.max_model_len,
+                            mm_encoder_tp_mode="data",
+                            )
 
-    client = OpenAI(
-        api_key="EMPTY",
-        base_url=f'http://localhost:{args.port}/v1',
-    )
-
-    if args.api_key != "EMPTY":
-        if 'azure' in args.url:
-            client = AzureOpenAI(
-                azure_endpoint=args.url,
-                api_key=args.api_key,
-            )
-        else:
-            client = OpenAI(
-                api_key=args.api_key,
-                base_url=args.url,
-            )
 
     # Process in batches
     all_results = {}
@@ -172,18 +155,11 @@ def main():
         all_results[dataset_name] = []
     
     for dataset_name, samples in all_samples.items():
-        prompts, metadata = prepare_messages(dataset_name, samples, args)
+        prompts, metadata = prepare_messages_local(dataset_name, samples, args)
         outputs = []
         for prompt in tqdm(prompts):
-            response = client.chat.completions.create(
-                model=args.model,
-                messages=prompt,
-                max_tokens=2048,
-                temperature=args.temperature,
-                top_p=args.top_p,
-            )
-            output = response.choices[0].message.content
-            outputs.append(output)
+            response = llm.generate(prompt)
+            outputs.append(response)
         # outputs = llm.generate(prompts, sampling_params)
         results = process_outputs_simplified(outputs, metadata)
         output_dict = {

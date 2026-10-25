@@ -107,23 +107,52 @@ def encode_image_to_base64(image: str|Any) -> str:
 
 
 def prepare_messages(dataset_name: str, samples: List[Dict], args) -> Tuple[List[Dict], List[Dict]]:
-    """Prepare prompts for all samples"""
+    """Prepare prompts for all samples (supports single image or multiple images)"""
     messages = []
     metadata = []
-    
+
     for item in tqdm(samples, desc=f"Preparing {dataset_name} prompts"):
-        # Skip if image doesn't exist
-        if isinstance(item['image_path'], str) and not os.path.exists(item["image_path"]):
-            continue
-        
-        # Load image
-        image = load_image(item["image_path"], args.min_pixels, args.max_pixels)
-        if image is None:
-            continue
-        
-        # if "<image>" not in item['question']:
-        #     item['question'] = "<image>\n" + item['question']
-        image_url = encode_image_to_base64(image)
+        image_path = item["image_path"]
+
+        # Handle multiple images (list of paths/PIL Images)
+        if isinstance(image_path, list):
+            images = []
+            skip = False
+            for p in image_path:
+                if isinstance(p, str) and not os.path.exists(p):
+                    skip = True
+                    break
+                img = load_image(p, args.min_pixels, args.max_pixels)
+                if img is None:
+                    skip = True
+                    break
+                images.append(img)
+            if skip:
+                continue
+
+            user_content = []
+            for img in images:
+                image_url = encode_image_to_base64(img)
+                user_content.append({
+                    "type": "image_url",
+                    "image_url": {'url': "data:image/png;base64," + image_url},
+                })
+            user_content.append({"type": "text", "text": f"{item['question']}"})
+        else:
+            # Single image
+            if isinstance(image_path, str) and not os.path.exists(image_path):
+                continue
+            image = load_image(image_path, args.min_pixels, args.max_pixels)
+            if image is None:
+                continue
+            image_url = encode_image_to_base64(image)
+            user_content = [
+                {
+                    "type": "image_url",
+                    "image_url": {'url': "data:image/png;base64," + image_url},
+                },
+                {"type": "text", "text": f"{item['question']}"},
+            ]
 
         message = [
             {
@@ -134,34 +163,12 @@ def prepare_messages(dataset_name: str, samples: List[Dict], args) -> Tuple[List
             },
             {
                 "role": "user",
-                "content": [
-                    {
-                        "type": "image_url",
-                        "image_url": {'url': "data:image/png;base64," + image_url},
-                    },
-                    {"type": "text", "text": f"{item['question']}"},
-                ],
+                "content": user_content,
             }
         ]
 
-        # Create prompt
-        # if args.version == "grpo":
-        #     prompt_text = f"<|im_start|>system\n{args.system_prompt}<|im_end|>\n<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|>{item['question']}<|im_end|>\n<|im_start|>assistant\n"
-        # elif args.version == "back":
-        #     prompt_text = f"<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|>{item['question']} {args.system_prompt}<|im_end|>\n<|im_start|>assistant\n"
-        # elif args.version == "hint":
-        #     prompt_text = f"<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|> {args.system_prompt} \n Qwestion: {item['question']}<|im_end|>\n<|im_start|>assistant\n"
-        # else:
-        #     raise
-        
-        # prompts.append({
-        #     "prompt": prompt_text,
-        #     "multi_modal_data": {"image": image},
-        # })
-
         messages.append(message)
-        
-        
+
         metadata.append({
             "dataset": dataset_name,
             "id": item["id"],
@@ -170,5 +177,70 @@ def prepare_messages(dataset_name: str, samples: List[Dict], args) -> Tuple[List
             "prompt": messages,
             **{k: v for k, v in item.items() if k not in ["image_path", "dataset", "id", "question", "answer"]}
         })
-    
+
+    return messages, metadata
+
+
+def prepare_messages_local(dataset_name: str, samples: List[Dict], args) -> Tuple[List[Dict], List[Dict]]:
+    """Prepare prompts for all samples (supports single image or multiple images)"""
+    messages = []
+    metadata = []
+
+    for item in tqdm(samples, desc=f"Preparing {dataset_name} prompts"):
+        image_path = item["image_path"]
+
+        # Handle multiple images (list of paths/PIL Images)
+        if isinstance(image_path, list):
+            images = []
+            skip = False
+            for p in image_path:
+                if isinstance(p, str) and not os.path.exists(p):
+                    skip = True
+                    break
+                img = load_image(p, args.min_pixels, args.max_pixels)
+                if img is None:
+                    skip = True
+                    break
+                images.append(img)
+            if skip:
+                continue
+
+            user_content = [{"type": "image", "image": img} for img in images]
+            user_content.append({"type": "text", "text": f"{item['question']}"})
+        else:
+            # Single image
+            if isinstance(image_path, str) and not os.path.exists(image_path):
+                continue
+            image = load_image(image_path, args.min_pixels, args.max_pixels)
+            if image is None:
+                continue
+            user_content = [
+                {"type": "image", "image": image},
+                {"type": "text", "text": f"{item['question']}"},
+            ]
+
+        message = [
+            {
+                "role": "system",
+                "content": [
+                    {"type": "text", "text": args.system_prompt}
+                ]
+            },
+            {
+                "role": "user",
+                "content": user_content,
+            }
+        ]
+
+        messages.append(message)
+
+        metadata.append({
+            "dataset": dataset_name,
+            "id": item["id"],
+            "question": item["question"],
+            "answer": item["answer"],
+            "prompt": messages,
+            **{k: v for k, v in item.items() if k not in ["image_path", "dataset", "id", "question", "answer"]}
+        })
+
     return messages, metadata

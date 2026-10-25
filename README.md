@@ -33,10 +33,8 @@ If you find our work helpful, please cite:
 @article{domllmsreallyseeit,
       title={Do MLLMs Really See It: Reinforcing Visual Attention in Multimodal LLMs}, 
       author={Siqu Ou and Tianrui Wan and Zhiyuan Zhao and Junyu Gao and Xuelong Li},
-      year={2026},
-      eprint={2602.08241},
-      archivePrefix={arXiv},
-      primaryClass={cs.AI},
-      url={https://arxiv.org/abs/2602.08241}, 
+      booktitle = {Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing},
+      year = {2026},
+      pages = {9981--9997},
 }
 ```
