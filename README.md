@@ -30,7 +30,7 @@ To use the pre-trained models for evaluation, follow the steps below:
 If you find our work helpful, please cite:
 
 ```bibtex
-@article{domllmsreallyseeit,
+@inproceedings{domllmsreallyseeit,
       title={Do MLLMs Really See It: Reinforcing Visual Attention in Multimodal LLMs}, 
       author={Siqu Ou and Tianrui Wan and Zhiyuan Zhao and Junyu Gao and Xuelong Li},
       booktitle = {Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing},
